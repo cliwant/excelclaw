@@ -13,5 +13,3 @@ dependencies = [
     "python-multipart>=0.0.9",
 ]
 
-[project.scripts]
-dev = "uvicorn app.main:app --reload --port 8000"
