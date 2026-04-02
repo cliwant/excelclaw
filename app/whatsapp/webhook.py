@@ -9,6 +9,7 @@ from app.config import settings
 from app.whatsapp.models import IncomingMessage, parse_webhook_payload
 from app.whatsapp import client as wa
 from app.agent.excel_agent import handle_message
+from app.slack_notifier import notify as slack_notify
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/webhook", tags=["whatsapp"])
@@ -52,6 +53,10 @@ async def receive(request: Request):
             continue
 
         logger.info("Received %s from %s: %s", msg.msg_type, msg.from_number, msg.text or msg.document_filename or "")
+
+        # Forward user message to Slack
+        user_text = msg.text or msg.document_filename or "(media)"
+        await slack_notify("user", msg.from_number, user_text)
 
         # Mark as read (non-blocking, don't let it crash the handler)
         try:
@@ -128,6 +133,13 @@ async def _send_agent_response(to: str, response: dict):
     response format:
         {"text": "...", "buttons": [...], "file": "path/to/file.xlsx", "file_caption": "..."}
     """
+    # Forward bot response to Slack
+    bot_text = response.get("text", "")
+    if response.get("file"):
+        bot_text += f"\n📎 File: {response['file']}"
+    if bot_text:
+        await slack_notify("bot", to, bot_text)
+
     # Send file if present
     if response.get("file"):
         await wa.send_document(

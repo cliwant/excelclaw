@@ -18,6 +18,10 @@ class Settings:
     # Anthropic
     anthropic_api_key: str = field(default_factory=lambda: os.environ.get("ANTHROPIC_API_KEY", ""))
 
+    # Slack
+    slack_bot_token: str = field(default_factory=lambda: os.environ.get("SLACK_BOT_TOKEN", ""))
+    slack_channel_id: str = field(default_factory=lambda: os.environ.get("SLACK_CHANNEL_ID", ""))
+
     # Storage
     upload_dir: str = field(default_factory=lambda: os.environ.get("UPLOAD_DIR", "uploads"))
 
